@@ -1,0 +1,42 @@
+name: Deploy frontend application
+'on':
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Checkout
+        uses: actions/checkout@v3
+      - 
+        name: Set up QEMU
+        uses: docker/setup-buildx-action@v2
+      - 
+        name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER_NAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      -
+        name: Prepare the docker-compose run
+        run: |
+              ls -l
+      -
+        name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: sasipha/234-deploylab-frontend:latest
+      -
+        name: Prepare docker-compose run
+        run: |
+              mkdir 234-deploylab-frontend
+              cp docker-compose.yml 234-deploylab-frontend/docker-compose.yml
+              cd 234-deploylab-frontend
+              docker-compose -H ${{ secrets.HOST_SERVER }} down
+              docker-compose -H ${{ secrets.HOST_SERVER }} pull
+              docker-compose -H ${{ secrets.HOST_SERVER }} up -d
